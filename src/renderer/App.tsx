@@ -1,7 +1,8 @@
 import React from 'react';
-import { MemoryRouter as Router, Switch, Route } from 'react-router-dom';
+import { MemoryRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import icon from '../../assets/icon.svg';
 import './App.global.css';
+import AudioPage from './pages/audio';
 
 const Hello = () => {
   return (
@@ -11,6 +12,8 @@ const Hello = () => {
       </div>
       <h1>electron-react-boilerplate</h1>
       <div className="Hello">
+        <Link to="/audio">Audio</Link>
+
         <a
           href="https://electron-react-boilerplate.js.org/"
           target="_blank"
@@ -44,7 +47,8 @@ export default function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/" component={Hello} />
+        <Route path="/hello" component={Hello} />
+        <Route path="/" component={AudioPage} />
       </Switch>
     </Router>
   );
