@@ -1,3 +1,4 @@
+/* eslint-disable promise/always-return */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { RECORD_STATUS } from 'enums/video.enums';
@@ -132,6 +133,9 @@ const VideoPage: React.FC = () => {
           // make stream available to browser console
           // eslint-disable-line
           setVideoStream(stream);
+          // if (video) {
+          //   video.play();
+          // }
         })
         .catch((err) => {
           /* 处理error */
@@ -178,12 +182,13 @@ const VideoPage: React.FC = () => {
     const superBuffer = new Blob(recordedBlobs, { type: mimeType });
     const src = window.URL.createObjectURL(superBuffer);
     console.log('superBuffer, src', superBuffer, src);
-    // if (video) {
-    //   video.srcObject = null;
-    //   video.src = src;
-    //   video.controls = true;
-    //   video.play();
-    // }
+    if (video) {
+      stopCamera();
+      video.srcObject = null;
+      video.src = src;
+      video.controls = true;
+      // video.play();
+    }
   };
   const downloadVideo = () => {
     const blob = new Blob(recordedBlobs, { type: 'video/webm' });
@@ -262,6 +267,9 @@ const VideoPage: React.FC = () => {
           // value={mimeType}
         />
       </div>
+      <video id="player1">
+        <track kind="captions" />
+      </video>
       <canvas />
       <p>
         Draw a frame from the video onto the canvas element using the{' '}
