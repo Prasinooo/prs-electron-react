@@ -2,7 +2,8 @@ import React from 'react';
 import { MemoryRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import icon from '../../assets/icon.svg';
 import './App.global.css';
-import AudioPage from './pages/audio';
+import './style/common.css';
+import VideoPage from './pages/Video';
 
 const Hello = () => {
   return (
@@ -48,7 +49,7 @@ export default function App() {
     <Router>
       <Switch>
         <Route path="/hello" component={Hello} />
-        <Route path="/" component={AudioPage} />
+        <Route path="/" component={VideoPage} />
       </Switch>
     </Router>
   );

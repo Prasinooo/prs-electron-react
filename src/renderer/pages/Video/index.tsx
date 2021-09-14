@@ -3,9 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const AudioPage: React.FC = () => {
+const VideoPage: React.FC = () => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
   const [video, setVideo] = useState<HTMLVideoElement>();
+  const [streamObj, setStreamObj] = useState<MediaStream>();
   useEffect(() => {
     const getedcanvas = document.querySelector('canvas');
     const getedvideo = document.querySelector('video');
@@ -16,20 +17,29 @@ const AudioPage: React.FC = () => {
       canvas.width = 480;
       canvas.height = 360;
     }
+    console.log('canvas, video', canvas, video);
   }, []);
 
-  const button = document.querySelector('button');
-  if (button && canvas != null && video != null) {
-    button.onclick = () => {
+  const takeSnapshot = () => {
+    if (canvas != null && video != null) {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas
         .getContext('2d')
         ?.drawImage(video, 0, 0, canvas.width, canvas.height);
-    };
-  }
+    }
+  };
 
-  console.log('audio init');
+  const stopCamera = () => {
+    streamObj?.getTracks().forEach((track) => {
+      track.stop();
+    });
+    if (video && video != null && video != undefined) { // eslint-disable-line
+      video.srcObject = null;
+      setStreamObj(undefined);
+    }
+  };
+
   const getUserMedia = () => {
     const supports = navigator.mediaDevices.getSupportedConstraints();
     let constraints: MediaStreamConstraints;
@@ -49,13 +59,15 @@ const AudioPage: React.FC = () => {
         .getUserMedia(constraints)
         .then((stream) => {
           /* 使用这个stream stream */
-          const mediaRecorder = new MediaRecorder(stream);
-          return mediaRecorder;
+          // const mediaRecorder = new MediaRecorder(stream);
+          // return mediaRecorder;
           // window.stream = stream;
           // make stream available to browser console
           // eslint-disable-line
+          console.log('strem', stream);
           if (video && video != null && video != undefined) { // eslint-disable-line
             video.srcObject = stream;
+            setStreamObj(stream);
           }
         })
         .catch((err) => {
@@ -70,7 +82,7 @@ const AudioPage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div className="page-container">
       Audio
       <Link to="/hello">Hello</Link>
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
@@ -80,7 +92,12 @@ const AudioPage: React.FC = () => {
       <video playsInline autoPlay>
         <track kind="captions" />
       </video>
-      <button type="button">Take snapshot</button>
+      <button type="button" id="take_snapshot" onClick={takeSnapshot}>
+        Take snapshot
+      </button>
+      <button type="button" id="stop_camera" onClick={stopCamera}>
+        Stop Camera
+      </button>
       <canvas />
       <p>
         Draw a frame from the video onto the canvas element using the{' '}
@@ -102,4 +119,4 @@ const AudioPage: React.FC = () => {
   );
 };
 
-export default AudioPage;
+export default VideoPage;
