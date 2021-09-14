@@ -4,13 +4,13 @@
  */
 body {
   /* position: relative; */
-  color: white;
+  /* color: white; */
   height: 100vh;
   background: linear-gradient(
     200.96deg,
-    #fedc2a -29.09%,
-    #dd5789 51.77%,
-    #7a2c9e 129.35%
+    #4c02f9 -29.09%,
+    #57dd79 51.77%,
+    #00d5fa 129.35%
   );
   font-family: sans-serif;
   /* overflow-y: hidden; */

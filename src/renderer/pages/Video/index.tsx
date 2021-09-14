@@ -1,13 +1,56 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable react/jsx-no-comment-textnodes */
+import { RECORD_STATUS } from 'enums/video.enums';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 // import { desktopCapturer } from 'electron';
+import Select from 'react-select';
+import { MimeTypeOptionModel } from 'types/video';
 
 const VideoPage: React.FC = () => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
   const [video, setVideo] = useState<HTMLVideoElement>();
   const [streamObj, setStreamObj] = useState<MediaStream>();
+  const [recordedBlobs, setRecordedBlobs] = useState<BlobPart[]>([]);
+  const [mimeType, setMimeType] = useState<string>();
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder>();
+  const [recordStatus, setRecordStatus] = useState<RECORD_STATUS>(
+    RECORD_STATUS.STOPPED
+  );
+
+  const possibleMimeTypes = [
+    {
+      value: 'video/webm;codecs="vp9,opus"',
+      label: 'webm vp9 opus',
+    },
+    {
+      value: 'video/webm;codecs="vp8,opus"',
+      label: 'webm vp8 opus',
+    },
+    {
+      value: 'video/webm;codecs="h264,opus"',
+      label: 'webm h264 opus',
+    },
+    {
+      value: 'video/mp4;codecs=avc1.4d002a',
+      label: 'mp4 avc1.4d002a',
+    },
+  ];
+
+  const mimeTypeOptions = possibleMimeTypes.filter(
+    (option: MimeTypeOptionModel) => {
+      return MediaRecorder.isTypeSupported(option.value);
+    }
+  );
+
+  function handleDataAvailable(event: BlobEvent) {
+    console.log('handleDataAvailable', event);
+    if (event.data && event.data.size > 0) {
+      recordedBlobs.push(event.data);
+    }
+  }
+  console.log('mimeTypeOptions', mimeTypeOptions);
+
   useEffect(() => {
     const getedcanvas = document.querySelector('canvas');
     const getedvideo = document.querySelector('video');
@@ -20,6 +63,19 @@ const VideoPage: React.FC = () => {
     }
     console.log('canvas, video', canvas, video);
   }, []);
+
+  useEffect(() => {
+    if (mediaRecorder) {
+      mediaRecorder.onstop = (event) => {
+        console.log('Recorder stopped: ', event);
+        console.log('Recorded Blobs: ', recordedBlobs);
+      };
+      mediaRecorder.ondataavailable = handleDataAvailable;
+      mediaRecorder.start();
+      console.log('started!!!!!!!');
+      setRecordStatus(RECORD_STATUS.STARTED);
+    }
+  }, [mediaRecorder]);
 
   const takeSnapshot = () => {
     if (canvas != null && video != null) {
@@ -44,6 +100,7 @@ const VideoPage: React.FC = () => {
   const setVideoStream = (stream: MediaStream) => {
     console.log('strem', stream);
     if (video && video != null && video != undefined) { // eslint-disable-line
+      console.log('stream obj seted');
       video.srcObject = stream;
       setStreamObj(stream);
     }
@@ -83,9 +140,73 @@ const VideoPage: React.FC = () => {
     }
   };
 
+  const startRecording = () => {
+    setRecordedBlobs([]);
+    const mimeOptions: MediaRecorderOptions = {
+      mimeType,
+    };
+    console.log('startRecording', streamObj);
+    try {
+      if (streamObj) {
+        const newMediaRecorder = new MediaRecorder(streamObj, mimeOptions);
+        setMediaRecorder(newMediaRecorder);
+        console.log('start mediaRecorder', newMediaRecorder, mediaRecorder);
+      }
+    } catch (e) {
+      console.error('Exception while creating MediaRecorder:', e);
+    }
+  };
+
+  const stopRecording = () => {
+    console.log('stopRecording');
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setRecordStatus(RECORD_STATUS.STOPPED);
+    }
+  };
+
+  const toggleRecording = () => {
+    console.log('toggleRecord');
+    if (recordStatus === RECORD_STATUS.STOPPED) {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  };
+
+  const playVideo = () => {
+    const superBuffer = new Blob(recordedBlobs, { type: mimeType });
+    const src = window.URL.createObjectURL(superBuffer);
+    console.log('superBuffer, src', superBuffer, src);
+    // if (video) {
+    //   video.srcObject = null;
+    //   video.src = src;
+    //   video.controls = true;
+    //   video.play();
+    // }
+  };
+  const downloadVideo = () => {
+    const blob = new Blob(recordedBlobs, { type: 'video/webm' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'test.webm';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+  };
+
+  const test = () => {
+    console.log('mediaRecorder, streamObj', mediaRecorder, streamObj);
+  };
+
   return (
     <div className="page-container">
-      Audio
+      Video
       <Link to="/hello">Hello</Link>
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <button type="button" id="getCameraStream" onClick={() => getUserMedia()}>
@@ -101,12 +222,46 @@ const VideoPage: React.FC = () => {
       <video playsInline autoPlay>
         <track kind="captions" />
       </video>
+      <button type="button" id="take_snapshot" onClick={test}>
+        test
+      </button>
       <button type="button" id="take_snapshot" onClick={takeSnapshot}>
         Take snapshot
       </button>
       <button type="button" id="stop_camera" onClick={stopCamera}>
         Stop Camera
       </button>
+      <button
+        type="button"
+        id="record_camera"
+        disabled={!mimeType}
+        onClick={toggleRecording}
+      >
+        {recordStatus === RECORD_STATUS.STOPPED
+          ? 'Start Recording'
+          : 'Stop Recording'}
+      </button>
+      <button type="button" id="play" onClick={playVideo}>
+        Play
+      </button>
+      <button type="button" id="download" onClick={downloadVideo}>
+        Download
+      </button>
+      <div
+        style={{
+          width: '50%',
+          marginTop: '10px',
+        }}
+      >
+        <Select
+          defaultValue={mimeTypeOptions[0].value}
+          options={mimeTypeOptions}
+          onChange={(target: MimeTypeOptionModel) => {
+            setMimeType(target.value);
+          }}
+          // value={mimeType}
+        />
+      </div>
       <canvas />
       <p>
         Draw a frame from the video onto the canvas element using the{' '}
