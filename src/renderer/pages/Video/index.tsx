@@ -2,6 +2,7 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+// import { desktopCapturer } from 'electron';
 
 const VideoPage: React.FC = () => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
@@ -40,6 +41,14 @@ const VideoPage: React.FC = () => {
     }
   };
 
+  const setVideoStream = (stream: MediaStream) => {
+    console.log('strem', stream);
+    if (video && video != null && video != undefined) { // eslint-disable-line
+      video.srcObject = stream;
+      setStreamObj(stream);
+    }
+  };
+
   const getUserMedia = () => {
     const supports = navigator.mediaDevices.getSupportedConstraints();
     let constraints: MediaStreamConstraints;
@@ -57,6 +66,7 @@ const VideoPage: React.FC = () => {
       };
       navigator.mediaDevices
         .getUserMedia(constraints)
+        // eslint-disable-next-line promise/always-return
         .then((stream) => {
           /* 使用这个stream stream */
           // const mediaRecorder = new MediaRecorder(stream);
@@ -64,21 +74,13 @@ const VideoPage: React.FC = () => {
           // window.stream = stream;
           // make stream available to browser console
           // eslint-disable-line
-          console.log('strem', stream);
-          if (video && video != null && video != undefined) { // eslint-disable-line
-            video.srcObject = stream;
-            setStreamObj(stream);
-          }
+          setVideoStream(stream);
         })
         .catch((err) => {
           /* 处理error */
           console.error(err);
         });
     }
-
-    // const track = new MediaStreamTrack();
-    // const constraints = track.getConstraints();
-    // const constraints = MediaStreamTrack.getConstraints();
   };
 
   return (
@@ -86,9 +88,16 @@ const VideoPage: React.FC = () => {
       Audio
       <Link to="/hello">Hello</Link>
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-      <div onClick={() => getUserMedia()} onKeyDown={() => getUserMedia()}>
+      <button type="button" id="getCameraStream" onClick={() => getUserMedia()}>
         test get media
-      </div>
+      </button>
+      {/* <button
+        type="button"
+        id="getDisplayStream"
+        onClick={() => getDisplayStream()}
+      >
+        test get display
+      </button> */}
       <video playsInline autoPlay>
         <track kind="captions" />
       </video>
