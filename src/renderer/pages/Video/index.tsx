@@ -209,24 +209,56 @@ const VideoPage: React.FC = () => {
     console.log('mediaRecorder, streamObj', mediaRecorder, streamObj);
   };
 
+  const downloadSnapshot = (id: string, fileName: string) => {
+    const canvasElement: HTMLCanvasElement = document.getElementById(
+      id
+    ) as HTMLCanvasElement;
+
+    const MIME_TYPE = 'image/png';
+    if (canvasElement) {
+      const imgURL = canvasElement.toDataURL(MIME_TYPE);
+
+      const dlLink = document.createElement('a');
+      dlLink.download = fileName;
+      dlLink.href = imgURL;
+      dlLink.dataset.downloadurl = [
+        MIME_TYPE,
+        dlLink.download,
+        dlLink.href,
+      ].join(':');
+
+      document.body.appendChild(dlLink);
+      dlLink.click();
+      document.body.removeChild(dlLink);
+    }
+  };
+
   return (
     <div className="page-container">
       Video
       <Link to="/hello">Hello</Link>
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-      <button type="button" id="getCameraStream" onClick={() => getUserMedia()}>
-        test get media
-      </button>
-      {/* <button
-        type="button"
-        id="getDisplayStream"
-        onClick={() => getDisplayStream()}
-      >
-        test get display
-      </button> */}
-      <video playsInline autoPlay>
-        <track kind="captions" />
-      </video>
+      <div>
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+        <button
+          type="button"
+          id="getCameraStream"
+          onClick={() => getUserMedia()}
+        >
+          test get media
+        </button>
+        {/* <button
+          type="button"
+          id="getDisplayStream"
+          onClick={() => getDisplayStream()}
+        >
+          test get display
+        </button> */}
+      </div>
+      <div>
+        <video playsInline autoPlay className="prs-video">
+          <track kind="captions" />
+        </video>
+      </div>
       <button type="button" id="take_snapshot" onClick={test}>
         test
       </button>
@@ -250,7 +282,16 @@ const VideoPage: React.FC = () => {
         Play
       </button>
       <button type="button" id="download" onClick={downloadVideo}>
-        Download
+        Download Video
+      </button>
+      <button
+        type="button"
+        id="downloadSnapshot"
+        onClick={() =>
+          downloadSnapshot('snapshot_canvas', Date.now().toString())
+        }
+      >
+        Download Snapshot
       </button>
       <div
         style={{
@@ -267,10 +308,14 @@ const VideoPage: React.FC = () => {
           // value={mimeType}
         />
       </div>
-      <video id="player1">
-        <track kind="captions" />
-      </video>
-      <canvas />
+      <div>
+        <video id="player1" className="prs-video">
+          <track kind="captions" />
+        </video>
+      </div>
+      <div>
+        <canvas className="prs-canvas" id="snapshot_canvas" />
+      </div>
       <p>
         Draw a frame from the video onto the canvas element using the{' '}
         <code>drawImage()</code> method.

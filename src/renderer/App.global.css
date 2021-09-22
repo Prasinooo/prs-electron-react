@@ -58,3 +58,11 @@ a:hover {
   align-items: center;
   margin: 20px 0;
 }
+
+.prs-video {
+  border: 1px solid #fff;
+}
+
+.prs-canvas {
+  border: 1px solid #fff;
+}
