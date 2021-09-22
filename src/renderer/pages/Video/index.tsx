@@ -120,7 +120,7 @@ const VideoPage: React.FC = () => {
     } else {
       constraints = {
         video: true,
-        audio: false,
+        audio: true,
       };
       navigator.mediaDevices
         .getUserMedia(constraints)
