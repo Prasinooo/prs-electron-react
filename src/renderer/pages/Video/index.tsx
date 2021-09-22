@@ -1,12 +1,16 @@
+/* eslint-disable no-await-in-loop */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable promise/always-return */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable react/jsx-no-comment-textnodes */
 import { RECORD_STATUS } from 'enums/video.enums';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-// import { desktopCapturer } from 'electron';
+
 import Select from 'react-select';
 import { MimeTypeOptionModel } from 'types/video';
+// import { desktopCapturer } from 'electron';
+// const { desktopCapturer } = require('electron');
 
 const VideoPage: React.FC = () => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
@@ -62,6 +66,15 @@ const VideoPage: React.FC = () => {
       canvas.width = 480;
       canvas.height = 360;
     }
+    if (getedvideo) {
+      getedvideo.onplay = () => {
+        const videoStream = getedvideo.captureStream();
+        if (videoStream) {
+          setStreamObj(videoStream);
+        }
+      };
+    }
+
     console.log('canvas, video', canvas, video);
   }, []);
 
@@ -108,6 +121,7 @@ const VideoPage: React.FC = () => {
   };
 
   const getUserMedia = () => {
+    console.log('get user media');
     const supports = navigator.mediaDevices.getSupportedConstraints();
     let constraints: MediaStreamConstraints;
     if (
@@ -233,6 +247,51 @@ const VideoPage: React.FC = () => {
     }
   };
 
+  const handleCapturedScream = (stream: MediaStream) => {
+    if (video) {
+      video.srcObject = stream;
+      video.onloadedmetadata = (e) => video.play();
+    }
+  };
+
+  const handleCaptureError = (e: any) => {
+    console.error(e);
+  };
+
+  // const captureScreen = () => {
+  //   desktopCapturer
+  //     .getSources({ types: ['window', 'screen'] })
+  //     .then(async (sources) => {
+  //       for (const source of sources) {
+  //         // if (source.name === 'Electron') {
+  //         const trackConstraints: MediaTrackConstraints = {
+  //           // chromeMediaSource: 'desktop',
+  //           deviceId: source.id,
+  //           width: 1280,
+  //           height: 720,
+  //         };
+  //         const constraints: MediaStreamConstraints = {
+  //           audio: false,
+  //           video: trackConstraints,
+  //         };
+  //         try {
+  //           const stream = await navigator.mediaDevices.getUserMedia(
+  //             constraints
+  //           );
+  //           handleCapturedScream(stream);
+  //         } catch (e: any) {
+  //           handleCaptureError(e);
+  //         }
+  //         return;
+  //         // }
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       /* 处理error */
+  //       console.error(err);
+  //     });
+  // };
+
   return (
     <div className="page-container">
       Video
@@ -292,6 +351,9 @@ const VideoPage: React.FC = () => {
         }
       >
         Download Snapshot
+      </button>
+      <button type="button" id="captureScreen" onClick={() => captureScreen()}>
+        Capture Screen
       </button>
       <div
         style={{
