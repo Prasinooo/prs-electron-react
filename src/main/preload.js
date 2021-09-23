@@ -96,4 +96,4 @@ const captureScreen = () => {
     });
 };
 
-captureScreen();
+// captureScreen();

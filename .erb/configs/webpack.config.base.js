@@ -39,6 +39,9 @@ export default {
   resolve: {
     extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     modules: [webpackPaths.srcPath, 'node_modules'],
+    alias: {
+      react: path.resolve('./node_modules/react')
+    }
   },
 
   plugins: [

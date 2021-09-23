@@ -4,8 +4,13 @@ import icon from '../../assets/icon.svg';
 import './App.global.css';
 import './style/common.css';
 import VideoPage from './pages/Video';
+import AudioPage from './pages/Audio';
+import TestPage from './pages/test';
+// window.React2 = require('react');
 
 const Hello = () => {
+  //   console.log('react', window.React1, window.React2)
+  // console.log(window.React1 === window.React2);
   return (
     <div>
       <div className="Hello">
@@ -13,8 +18,6 @@ const Hello = () => {
       </div>
       <h1>electron-react-boilerplate</h1>
       <div className="Hello">
-        <Link to="/audio">Audio</Link>
-
         <a
           href="https://electron-react-boilerplate.js.org/"
           target="_blank"
@@ -47,9 +50,18 @@ const Hello = () => {
 export default function App() {
   return (
     <Router>
+      <div>
+        <Link to="/audio">Audio</Link>
+        <Link to="/hello">Hello</Link>
+        <Link to="/video">Video</Link>
+        <Link to="/test">Test</Link>
+      </div>
       <Switch>
+        <Route path="/" exact component={VideoPage} />
         <Route path="/hello" component={Hello} />
-        <Route path="/" component={VideoPage} />
+        <Route path="/video">{VideoPage}</Route>
+        <Route path="/audio">{AudioPage}</Route>
+        <Route path="/test">{TestPage}</Route>
       </Switch>
     </Router>
   );

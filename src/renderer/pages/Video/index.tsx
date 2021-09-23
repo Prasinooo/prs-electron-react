@@ -8,11 +8,15 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import Select from 'react-select';
+import ErrorBoundary from 'renderer/components/ErrorBoundary';
 import { MimeTypeOptionModel } from 'types/video';
 // import { desktopCapturer } from 'electron';
 // const { desktopCapturer } = require('electron');
 
 const VideoPage: React.FC = () => {
+  // const [canvas, setCanvas] = useState<HTMLCanvasElement>();
+
+  // return <div>video</div>;
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
   const [video, setVideo] = useState<HTMLVideoElement>();
   const [streamObj, setStreamObj] = useState<MediaStream>();
@@ -22,6 +26,50 @@ const VideoPage: React.FC = () => {
   const [recordStatus, setRecordStatus] = useState<RECORD_STATUS>(
     RECORD_STATUS.STOPPED
   );
+
+  useEffect(() => {
+    const getedcanvas = document.querySelector('canvas');
+    const getedvideo = document.querySelector('video');
+
+    if (getedcanvas != null) setCanvas(getedcanvas);
+    if (getedvideo != null) setVideo(getedvideo);
+    if (canvas) {
+      canvas.width = 480;
+      canvas.height = 360;
+    }
+    console.log('canvas, video', canvas, video);
+  }, []);
+
+  useEffect(() => {
+    if (video) {
+      video.onplay = () => {
+        const videoStream = video.captureStream();
+        if (videoStream) {
+          setStreamObj(videoStream);
+        }
+      };
+    }
+  }, [video]);
+
+  function handleDataAvailable(event: BlobEvent) {
+    console.log('handleDataAvailable', event);
+    if (event.data && event.data.size > 0) {
+      recordedBlobs.push(event.data);
+    }
+  }
+
+  useEffect(() => {
+    if (mediaRecorder) {
+      mediaRecorder.onstop = (event) => {
+        console.log('Recorder stopped: ', event);
+        console.log('Recorded Blobs: ', recordedBlobs);
+      };
+      mediaRecorder.ondataavailable = handleDataAvailable;
+      mediaRecorder.start();
+      console.log('started!!!!!!!');
+      setRecordStatus(RECORD_STATUS.STARTED);
+    }
+  }, [mediaRecorder]);
 
   const possibleMimeTypes = [
     {
@@ -48,48 +96,7 @@ const VideoPage: React.FC = () => {
     }
   );
 
-  function handleDataAvailable(event: BlobEvent) {
-    console.log('handleDataAvailable', event);
-    if (event.data && event.data.size > 0) {
-      recordedBlobs.push(event.data);
-    }
-  }
   console.log('mimeTypeOptions', mimeTypeOptions);
-
-  useEffect(() => {
-    const getedcanvas = document.querySelector('canvas');
-    const getedvideo = document.querySelector('video');
-
-    if (getedcanvas != null) setCanvas(getedcanvas);
-    if (getedvideo != null) setVideo(getedvideo);
-    if (canvas) {
-      canvas.width = 480;
-      canvas.height = 360;
-    }
-    if (getedvideo) {
-      getedvideo.onplay = () => {
-        const videoStream = getedvideo.captureStream();
-        if (videoStream) {
-          setStreamObj(videoStream);
-        }
-      };
-    }
-
-    console.log('canvas, video', canvas, video);
-  }, []);
-
-  useEffect(() => {
-    if (mediaRecorder) {
-      mediaRecorder.onstop = (event) => {
-        console.log('Recorder stopped: ', event);
-        console.log('Recorded Blobs: ', recordedBlobs);
-      };
-      mediaRecorder.ondataavailable = handleDataAvailable;
-      mediaRecorder.start();
-      console.log('started!!!!!!!');
-      setRecordStatus(RECORD_STATUS.STARTED);
-    }
-  }, [mediaRecorder]);
 
   const takeSnapshot = () => {
     if (canvas != null && video != null) {
@@ -293,108 +300,114 @@ const VideoPage: React.FC = () => {
   // };
 
   return (
-    <div className="page-container">
-      Video
-      <Link to="/hello">Hello</Link>
-      <div>
-        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
-        <button
-          type="button"
-          id="getCameraStream"
-          onClick={() => getUserMedia()}
-        >
-          test get media
-        </button>
-        {/* <button
+    <ErrorBoundary>
+      <div className="page-container">
+        Video
+        <Link to="/">Hello</Link>
+        <div>
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+          <button
+            type="button"
+            id="getCameraStream"
+            onClick={() => getUserMedia()}
+          >
+            test get media
+          </button>
+          {/* <button
           type="button"
           id="getDisplayStream"
           onClick={() => getDisplayStream()}
         >
           test get display
         </button> */}
-      </div>
-      <div>
-        <video playsInline autoPlay className="prs-video">
-          <track kind="captions" />
-        </video>
-      </div>
-      <button type="button" id="take_snapshot" onClick={test}>
-        test
-      </button>
-      <button type="button" id="take_snapshot" onClick={takeSnapshot}>
-        Take snapshot
-      </button>
-      <button type="button" id="stop_camera" onClick={stopCamera}>
-        Stop Camera
-      </button>
-      <button
-        type="button"
-        id="record_camera"
-        disabled={!mimeType}
-        onClick={toggleRecording}
-      >
-        {recordStatus === RECORD_STATUS.STOPPED
-          ? 'Start Recording'
-          : 'Stop Recording'}
-      </button>
-      <button type="button" id="play" onClick={playVideo}>
-        Play
-      </button>
-      <button type="button" id="download" onClick={downloadVideo}>
-        Download Video
-      </button>
-      <button
-        type="button"
-        id="downloadSnapshot"
-        onClick={() =>
-          downloadSnapshot('snapshot_canvas', Date.now().toString())
-        }
-      >
-        Download Snapshot
-      </button>
-      <button type="button" id="captureScreen" onClick={() => captureScreen()}>
-        Capture Screen
-      </button>
-      <div
-        style={{
-          width: '50%',
-          marginTop: '10px',
-        }}
-      >
-        <Select
-          defaultValue={mimeTypeOptions[0].value}
-          options={mimeTypeOptions}
-          onChange={(target: MimeTypeOptionModel) => {
-            setMimeType(target.value);
+        </div>
+        <div>
+          <video playsInline autoPlay className="prs-video">
+            <track kind="captions" />
+          </video>
+        </div>
+        <button type="button" id="take_snapshot" onClick={test}>
+          test
+        </button>
+        <button type="button" id="take_snapshot" onClick={takeSnapshot}>
+          Take snapshot
+        </button>
+        <button type="button" id="stop_camera" onClick={stopCamera}>
+          Stop Camera
+        </button>
+        <button
+          type="button"
+          id="record_camera"
+          disabled={!mimeType}
+          onClick={toggleRecording}
+        >
+          {recordStatus === RECORD_STATUS.STOPPED
+            ? 'Start Recording'
+            : 'Stop Recording'}
+        </button>
+        <button type="button" id="play" onClick={playVideo}>
+          Play
+        </button>
+        <button type="button" id="download" onClick={downloadVideo}>
+          Download Video
+        </button>
+        <button
+          type="button"
+          id="downloadSnapshot"
+          onClick={() =>
+            downloadSnapshot('snapshot_canvas', Date.now().toString())
+          }
+        >
+          Download Snapshot
+        </button>
+        <button
+          type="button"
+          id="captureScreen"
+          onClick={() => captureScreen()}
+        >
+          Capture Screen
+        </button>
+        <div
+          style={{
+            width: '50%',
+            marginTop: '10px',
           }}
-          // value={mimeType}
-        />
+        >
+          <Select
+            defaultValue={mimeTypeOptions[0].value}
+            options={mimeTypeOptions}
+            onChange={(target: MimeTypeOptionModel) => {
+              setMimeType(target.value);
+            }}
+            // value={mimeType}
+          />
+        </div>
+        <div>
+          <video id="player1" className="prs-video">
+            <track kind="captions" />
+          </video>
+        </div>
+        <div>
+          <canvas className="prs-canvas" id="snapshot_canvas" />
+        </div>
+        <p>
+          Draw a frame from the video onto the canvas element using the{' '}
+          <code>drawImage()</code> method.
+        </p>
+        <p>
+          The variables <code>canvas</code>, <code>video</code> and{' '}
+          <code>stream</code> are in global scope, so you can inspect them from
+          the console.
+        </p>
+        <a
+          href="https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/canvas"
+          title="View source for this page on GitHub"
+          id="viewSource"
+        >
+          View source on GitHub
+        </a>
       </div>
-      <div>
-        <video id="player1" className="prs-video">
-          <track kind="captions" />
-        </video>
-      </div>
-      <div>
-        <canvas className="prs-canvas" id="snapshot_canvas" />
-      </div>
-      <p>
-        Draw a frame from the video onto the canvas element using the{' '}
-        <code>drawImage()</code> method.
-      </p>
-      <p>
-        The variables <code>canvas</code>, <code>video</code> and{' '}
-        <code>stream</code> are in global scope, so you can inspect them from
-        the console.
-      </p>
-      <a
-        href="https://github.com/webrtc/samples/tree/gh-pages/src/content/getusermedia/canvas"
-        title="View source for this page on GitHub"
-        id="viewSource"
-      >
-        View source on GitHub
-      </a>
-    </div>
+    </ErrorBoundary>
   );
 };
 
